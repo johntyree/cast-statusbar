@@ -158,7 +158,7 @@ def main():
         '--marquee_speed', type=float, metavar='CHARACTERS / SECOND',
         default=5, help='Number of characters to scroll per second')
     parser.add_argument(
-        '--marquee_pause', type=float, metavar='SECONDS', default=1,
+        '--marquee_pause', type=float, metavar='SECONDS', default=2,
         help='Number of characters to scroll per second')
 
     args = parser.parse_args()
