@@ -12,3 +12,18 @@ reading into a status bar or somethig, and another that simply outputs a new
 status whenever there's a change.
 
 This is the former.
+
+Two systemd unit files are included, expecting that you'll configure your
+status bar to read from a FIFO at ~/.config/media-status-fifo.
+
+```bash
+$ mkdir -p ~/.config/media-status-fifo
+$ mkdir -p ~/.config/systemd/user
+$ ln -s $PWD/cast-status.socket ~/.config/systemd/user
+$ ln -s $PWD/cast-status.service ~/.config/systemd/user
+$ systemctl --user enable cast-status
+$ systemctl --user start cast-status
+```
+
+If you want to be clever and your wm is hooked up through systemd, you could
+depend on that instead.
