@@ -79,7 +79,7 @@ def main():
     parser.add_argument(
         '--period', metavar='SECONDS', default=10, type=int,
         help=('Duration to display current status before cycling to next'
-              ' active chromecast.')
+              ' active chromecast.'))
     args = parser.parse_args()
 
     s = StatusMonitor()

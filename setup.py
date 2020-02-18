@@ -15,7 +15,7 @@ setup(
     keywords="chromecast cast status",
     long_description=open('README.md').read(),
     entry_points={
-        'console_scripts': ['cast-statusbar = cast_statusbar:main'],
+        'console_scripts': ['cast-statusbar = cast_statusbar.main:main'],
     },
     install_requires=[
         'pychromecast',
