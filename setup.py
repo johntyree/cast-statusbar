@@ -10,13 +10,16 @@ setup(
     author='John Tyree',
     author_email='johntyree@gmail.com',
     license='GPL3+',
-    url='http://github.com/johntyree/caststatus',
+    url='http://github.com/johntyree/cast-statusbar',
     description="Chromecast Status Monitor",
     keywords="chromecast cast status",
     long_description=open('README.md').read(),
     entry_points={
-        'console_scripts': ['caststatus = caststatus:main'],
+        'console_scripts': ['cast-statusbar = cast_statusbar:main'],
     },
+    install_requires=[
+        'pychromecast',
+    ],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "License :: OSI Approved :: "
