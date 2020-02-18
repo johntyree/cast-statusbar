@@ -1,0 +1,16 @@
+[Unit]
+Description=Chromecast media status output
+After=network.target
+After=cast-statusbar.socket
+Requires=cast-statusbar.socket
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=10
+StandardOutput=file:/home/jtyree/.config/media-status-fifo
+ExecStart=/home/jtyree/.local/bin/cast-statusbar
+
+[Install]
+WantedBy=default.target

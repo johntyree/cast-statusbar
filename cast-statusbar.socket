@@ -1,0 +1,9 @@
+[Unit]
+Description=Fifo for Chromecast media status output
+
+[Socket]
+ListenFIFO=/home/jtyree/.config/media-status-fifo
+SocketMode=0600
+
+[Install]
+WantedBy=sockets.target
