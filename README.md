@@ -19,7 +19,6 @@ Two systemd unit files are included, expecting that you'll configure your
 status bar to read from a FIFO at ~/.config/media-status-fifo.
 
 ```bash
-$ mkdir -p ~/.config/media-status-fifo
 $ mkdir -p ~/.config/systemd/user
 $ ln -s $PWD/cast-statusbar.socket ~/.config/systemd/user
 $ ln -s $PWD/cast-statusbar.service ~/.config/systemd/user
