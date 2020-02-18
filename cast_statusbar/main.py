@@ -6,7 +6,7 @@
 import argparse
 import time
 from dataclasses import dataclass
-from typing import Iterator, List, Text
+from typing import Iterator, List, Text, Tuple
 
 import pychromecast
 
@@ -84,7 +84,7 @@ class StatusMonitor:
         return [player for player in self.players
                 if player.is_active and player.player_state != 'UNKNOWN']
 
-    def scroller(self, fmt: Text) -> Iterator[Text]:
+    def status_rotator(self, fmt: Text) -> Iterator[Text]:
         while True:
             for player in self.active_players:
                 yield fmt.format(p=player)
@@ -93,19 +93,47 @@ class StatusMonitor:
                 yield ''
                 time.sleep(1)
 
+
+def window_marquee(text: Text, width=10) -> Iterator[Tuple[bool, Text]]:
+    """Scroll the text back and forth.
+
+    Yields: Tuple[bool, Text]
+        bool: The text is currently at one extreme or the other.
+        Text: The scrolled text.
+    """
+    max_i = len(text) - width
+    i = 1
+    while True:
+        while i:
+            i -= 1
+            yield (i == 0, text[i:i+width])
+        while i < max_i:
+            i += 1
+            yield (i == max_i, text[i:i+width])
+
+
 def main():
     """Run main."""
     parser = argparse.ArgumentParser(description='Show local chromecast status')
     parser.add_argument(
         '--period', metavar='SECONDS', default=10, type=int,
-        help=('Duration to display current status before cycling to next'
-              ' active chromecast.'))
+        help=('Duration to display the status before cycling to the'
+              ' next active chromecast.'))
     parser.add_argument(
         '--format', '-f', metavar='FORMAT', default=DEFAULT_FMT,
         help='Format string for status.')
     parser.add_argument(
         '--unicode', '-u', action='store_true',
         help='Use unicode glyphs for {p.status} in format.')
+    parser.add_argument(
+        '--width', type=int, default=85,
+        help='Output at most `width` unicode codepoints per line.')
+    parser.add_argument(
+        '--marquee_speed', type=float, metavar='CHARACTERS / SECOND',
+        default=5, help='Number of characters to scroll per second')
+    parser.add_argument(
+        '--marquee_pause', type=float, metavar='SECONDS', default=1,
+        help='Number of characters to scroll per second')
 
     args = parser.parse_args()
 
@@ -114,9 +142,21 @@ def main():
       fmt = fmt.replace('{p.status}', '{p.unicode_status}')
 
     s = StatusMonitor()
-    for status in s.scroller(fmt):
-        print(status, flush=True)
-        time.sleep(args.period)
+    prev = None
+    marquee = None
+    for status in s.status_rotator(fmt):
+        start = time.time()
+        if status != prev:
+            prev = status
+            marquee = window_marquee(status, width=args.width)
+        for endpoint, output in marquee:
+            print(output, flush=True)
+            if endpoint:
+                time.sleep(args.marquee_pause)
+            else:
+                time.sleep(1/args.marquee_speed)
+            if time.time() - start > args.period:
+                break
     return 0
 
 if __name__ == '__main__':
