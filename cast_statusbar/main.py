@@ -10,13 +10,17 @@ from typing import Iterator, List, Text
 
 import pychromecast
 
-DEFAULT_FMT = '{p.status_unicode}{p.cast.name}: {p.artist} - {p.title}'
+DEFAULT_FMT = '{p.status_unicode}{p.name}: {p.artist} - {p.title}'
 
 
 @dataclass
 class Player:
     _cast: pychromecast.Chromecast
     _controller: pychromecast.controllers.media.MediaController
+
+    @property
+    def name(self):
+        return self._cast.name
 
     @property
     def album(self):
@@ -63,7 +67,7 @@ class StatusMonitor:
             controller = pychromecast.controllers.media.MediaController()
             cast.register_handler(controller)
             cast.wait()
-            self.players.append(Player(cast=cast, controller=controller))
+            self.players.append(Player(cast, controller))
 
     @property
     def active_players(self) -> List[Player]:
