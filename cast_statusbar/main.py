@@ -10,7 +10,7 @@ from typing import Iterator, List, Text
 
 import pychromecast
 
-DEFAULT_FMT = '{p.status_unicode}{p.name}: {p.artist} - {p.title}'
+DEFAULT_FMT = '{p.name}: {p.artist} - {p.title}'
 
 
 @dataclass
@@ -43,7 +43,17 @@ class Player:
         return self._controller.status.player_state
 
     @property
-    def status_unicode(self):
+    def status(self):
+        status = self._controller.status.player_state
+        return {
+            'PLAYING': '> ',
+            'PAUSED': '|| ',
+            'IDLE': '# ',
+            'BUFFERING': '8 ',
+        }.get(status, status)
+
+    @property
+    def unicode_status(self):
         status = self._controller.status.player_state
         return {
             'PLAYING': '▶️  ',
@@ -86,19 +96,27 @@ def main():
     """Run main."""
     parser = argparse.ArgumentParser(description='Show local chromecast status')
     parser.add_argument(
-        '--format', '-f', metavar='FORMAT', default=DEFAULT_FMT, type=str,
-        help='Format string for status')
-    parser.add_argument(
         '--period', metavar='SECONDS', default=10, type=int,
         help=('Duration to display current status before cycling to next'
               ' active chromecast.'))
+    parser.add_argument(
+        '--format', '-f', metavar='FORMAT', default=DEFAULT_FMT,
+        help='Format string for status.')
+    parser.add_argument(
+        '--unicode', '-u', action='store_true',
+        help='Use unicode glyphs for {p.status} in format.')
+
     args = parser.parse_args()
+
+    fmt = args.format
+    if args.unicode:
+      fmt = fmt.replace('{p.status}', '{p.unicode_status}')
 
     s = StatusMonitor()
     prev = ''
-    for status in s.scroller(args.format):
+    for status in s.scroller(fmt):
         if prev != status:
-            print(status)
+            print(status, flush=True)
             prev = status
         time.sleep(args.period)
     return 0
@@ -108,4 +126,4 @@ if __name__ == '__main__':
         main()
     except Exception:
         # Ensure final output is empty
-        print("")
+        print('', flush=True)
