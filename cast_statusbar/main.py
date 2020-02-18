@@ -147,7 +147,7 @@ def main():
               ' next active chromecast.'))
     parser.add_argument(
         '--format', '-f', metavar='FORMAT', default=DEFAULT_FMT,
-        help='Format string for status.')
+        help='Format string for status. Default: {!r}'.format(DEFAULT_FMT))
     parser.add_argument(
         '--unicode', '-u', action='store_true',
         help='Use unicode glyphs for {p.status} in format.')
@@ -155,7 +155,7 @@ def main():
         '--width', type=int, default=85,
         help='Output at most `width` unicode codepoints per line.')
     parser.add_argument(
-        '--marquee_speed', type=float, metavar='CHARACTERS / SECOND',
+        '--marquee_speed', type=float, metavar='CHARACTERS_PER_SECOND',
         default=5, help='Number of characters to scroll per second')
     parser.add_argument(
         '--marquee_pause', type=float, metavar='SECONDS', default=2,
