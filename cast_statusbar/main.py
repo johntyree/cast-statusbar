@@ -15,24 +15,32 @@ DEFAULT_FMT = '{p.status_unicode}{p.cast.name}: {p.artist} - {p.title}'
 
 @dataclass
 class Player:
-    cast: pychromecast.Chromecast
-    controller: pychromecast.controllers.media.MediaController
+    _cast: pychromecast.Chromecast
+    _controller: pychromecast.controllers.media.MediaController
 
     @property
     def album(self):
-        return self.controller.status.album
+        return self._controller.status.album
 
     @property
     def artist(self):
-        return self.controller.status.artist
+        return self._controller.status.artist
 
     @property
     def title(self):
-        return self.controller.status.title
+        return self._controller.status.title
+
+    @property
+    def is_active(self):
+        return self._controller.is_active
+
+    @property
+    def player_state(self):
+        return self._controller.status.player_state
 
     @property
     def status_unicode(self):
-        status = self.controller.status.player_state
+        status = self._controller.status.player_state
         return {
             'PLAYING': '▶️  ',
             'PAUSED': '⏸️  ',
@@ -41,10 +49,10 @@ class Player:
         }.get(status, status)
 
     def play(self):
-        return self.controller.play()
+        return self._controller.play()
 
     def pause(self):
-        return self.controller.pause()
+        return self._controller.pause()
 
 
 class StatusMonitor:
@@ -60,13 +68,13 @@ class StatusMonitor:
     @property
     def active_players(self) -> List[Player]:
         return [player for player in self.players
-                if player.controller.is_active
-                and player.controller.status.player_state != 'UNKNOWN']
+                if player.is_active and player.player_state != 'UNKNOWN']
 
     def scroller(self, fmt: Text) -> Iterator[Text]:
         while True:
             for player in self.active_players:
                 yield fmt.format(p=player)
+            # If nothing is active we never yield, so pause for a moment.
             if not self.active_players:
                 time.sleep(1)
 
