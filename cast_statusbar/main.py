@@ -104,14 +104,12 @@ def window_marquee(text: Text, width=10) -> Iterator[Tuple[bool, Text]]:
         Text: The scrolled text.
     """
     max_i = len(text) - width
-    i = 1
     while True:
-        while i:
-            i -= 1
-            yield (i == 0, text[i:i+width])
-        while i < max_i:
-            i += 1
-            yield (i == max_i, text[i:i+width])
+        yield (True, text[:width])
+        for i in range(max_i):
+            yield (False, text[i:i+width])
+        for i in range(max_i - 1, 0, -1):
+            yield (False, text[i:i+width])
 
 
 def run(args):
