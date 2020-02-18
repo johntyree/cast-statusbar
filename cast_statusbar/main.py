@@ -90,6 +90,7 @@ class StatusMonitor:
                 yield fmt.format(p=player)
             # If nothing is active we never yield, so pause for a moment.
             if not self.active_players:
+                yield ''
                 time.sleep(1)
 
 def main():
@@ -113,17 +114,14 @@ def main():
       fmt = fmt.replace('{p.status}', '{p.unicode_status}')
 
     s = StatusMonitor()
-    prev = ''
     for status in s.scroller(fmt):
-        if prev != status:
-            print(status, flush=True)
-            prev = status
+        print(status, flush=True)
         time.sleep(args.period)
     return 0
 
 if __name__ == '__main__':
     try:
         main()
-    except Exception:
+    finally:
         # Ensure final output is empty
         print('', flush=True)
