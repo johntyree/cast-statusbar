@@ -4,6 +4,8 @@
 
 
 import argparse
+import signal
+import sys
 import time
 from dataclasses import dataclass
 from typing import Iterator, List, Text, Tuple
@@ -112,8 +114,32 @@ def window_marquee(text: Text, width=10) -> Iterator[Tuple[bool, Text]]:
             yield (i == max_i, text[i:i+width])
 
 
-def main():
+def run(args):
     """Run main."""
+    fmt = args.format
+    if args.unicode:
+      fmt = fmt.replace('{p.status}', '{p.unicode_status}')
+
+    s = StatusMonitor()
+    prev = None
+    marquee = None
+    for status in s.status_rotator(fmt):
+        start = time.time()
+        if status != prev:
+            prev = status
+            marquee = window_marquee(status, width=args.width)
+        for endpoint, output in marquee:
+            print(output, flush=True)
+            if endpoint:
+                time.sleep(args.marquee_pause)
+            else:
+                time.sleep(1/args.marquee_speed)
+            if time.time() - start > args.period:
+                break
+    return 0
+
+
+def main():
     parser = argparse.ArgumentParser(description='Show local chromecast status')
     parser.add_argument(
         '--period', metavar='SECONDS', default=10, type=int,
@@ -137,31 +163,18 @@ def main():
 
     args = parser.parse_args()
 
-    fmt = args.format
-    if args.unicode:
-      fmt = fmt.replace('{p.status}', '{p.unicode_status}')
+    def die(num=0, _frame=None):
+        print('', flush=True)
+        if num:
+            sys.exit()
 
-    s = StatusMonitor()
-    prev = None
-    marquee = None
-    for status in s.status_rotator(fmt):
-        start = time.time()
-        if status != prev:
-            prev = status
-            marquee = window_marquee(status, width=args.width)
-        for endpoint, output in marquee:
-            print(output, flush=True)
-            if endpoint:
-                time.sleep(args.marquee_pause)
-            else:
-                time.sleep(1/args.marquee_speed)
-            if time.time() - start > args.period:
-                break
-    return 0
+    # Try to ensure final output is empty
+    signal.signal(signal.SIGTERM, die)
+    try:
+        return run(args)
+    finally:
+        die()
+
 
 if __name__ == '__main__':
-    try:
-        main()
-    finally:
-        # Ensure final output is empty
-        print('', flush=True)
+    main()
