@@ -103,13 +103,15 @@ def window_marquee(text: Text, width=10) -> Iterator[Tuple[bool, Text]]:
         bool: The text is currently at one extreme or the other.
         Text: The scrolled text.
     """
-    max_i = len(text) - width
+    width = max(0, width)
+    max_i = max(0, len(text) - width)
     while True:
-        yield (True, text[:width])
-        for i in range(max_i):
-            yield (False, text[i:i+width])
-        for i in range(max_i - 1, 0, -1):
-            yield (False, text[i:i+width])
+        if max_i == 0:
+            yield (True, text)
+        else:
+            for i in range(max_i * 2):
+                idx = max_i - abs(max_i - i)
+                yield (idx % max_i == 0, text[idx:idx+width])
 
 
 def run(args):
