@@ -1,6 +1,8 @@
 Caststatus
 ======
 
+![](example-bar.png)
+
 An experiment in reverse engineering the Griffin PowerMate USB jog
 wheel/button on Linux.
 
