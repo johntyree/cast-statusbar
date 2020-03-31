@@ -121,15 +121,18 @@ def run(args):
       fmt = fmt.replace('{p.status}', '{p.unicode_status}')
 
     s = StatusMonitor()
-    prev = None
+    previous_output = None
+    previous_status = None
     marquee = None
     for status in s.status_rotator(fmt):
         start = time.time()
-        if status != prev:
-            prev = status
+        if status != previous_status or marquee is None:
+            previous_status = status
             marquee = window_marquee(status, width=args.width)
         for endpoint, output in marquee:
-            print(output, flush=True)
+            if output != previous_output:
+                previous_output = output
+                print(output, flush=True)
             if endpoint:
                 time.sleep(args.marquee_pause)
             else:
@@ -166,7 +169,7 @@ def main():
     def die(num=0, _frame=None):
         print('', flush=True)
         if num:
-            sys.exit()
+            sys.exit(num)
 
     # Try to ensure final output is empty
     signal.signal(signal.SIGTERM, die)
