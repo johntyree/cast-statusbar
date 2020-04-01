@@ -14,6 +14,14 @@ from typing import Iterator, List, Text, Tuple
 
 import pychromecast
 
+try:
+    from twols import trace_with
+except ImportError:
+    # No-op decorator
+    def trace_with(func=None):
+        return lambda x: x
+
+LOGGER = logging.getLogger(__name__)
 DEFAULT_FMT = '{p.app} | {p.name}: {p.artist} - {p.title}'
 
 
@@ -85,6 +93,7 @@ class StatusMonitor:
         self.chromecasts = chromecasts
         self._players = self.discover(chromecasts)
 
+    @twols.trace_with(LOGGER.info)
     def discover(self, chromecasts: List[pychromecast.Chromecast] = None):
         logging.info("Searching for chromecasts.")
         players = []
