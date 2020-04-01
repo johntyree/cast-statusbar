@@ -105,6 +105,9 @@ class StatusMonitor:
             LOGGER.debug("Registered %r", cast)
             players.append(Player(cast, controller))
         self.discover_time = datetime.datetime.now()
+        LOGGER.info("Found %d devices: %s",
+                    len(players),
+                    ', '.join(sorted(p.name for p in players)))
         return players
 
     @property
@@ -116,6 +119,10 @@ class StatusMonitor:
         if self.should_refresh:
             LOGGER.info("Chromecast list expired, Refreshing...")
             self._players = self.discover(self.chromecasts)
+            hours, seconds = divmod(self.ttl.total_seconds(), 3600)
+            minutes, seconds = divmod(seconds, 60)
+            countdown = "{:02g}:{:02g}:{:02g}".format(hours, minutes, seconds)
+            LOGGER.info("Next refresh in %s", countdown)
         return self._players
 
     @property
