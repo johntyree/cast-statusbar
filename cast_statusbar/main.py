@@ -4,6 +4,8 @@
 
 
 import argparse
+import datetime
+import logging
 import signal
 import sys
 import time
@@ -12,7 +14,7 @@ from typing import Iterator, List, Text, Tuple
 
 import pychromecast
 
-DEFAULT_FMT = '{p.name}: {p.artist} - {p.title}'
+DEFAULT_FMT = '{p.app} | {p.name}: {p.artist} - {p.title}'
 
 
 @dataclass
@@ -23,6 +25,10 @@ class Player:
     @property
     def name(self):
         return self._cast.name
+
+    @property
+    def app(self):
+        return self._cast.app_display_name
 
     @property
     def album(self):
