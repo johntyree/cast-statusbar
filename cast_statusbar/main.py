@@ -88,7 +88,7 @@ class Player:
 class StatusMonitor:
 
     def __init__(self, chromecasts: List[pychromecast.Chromecast] = None,
-                 ttl=datetime.timedelta(minutes=4)):
+                 ttl=datetime.timedelta(minutes=3)):
         self.ttl = ttl
         self.chromecasts = chromecasts
         self._players = self.discover(chromecasts)
