@@ -181,7 +181,9 @@ def run(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Show local chromecast status')
+    parser = argparse.ArgumentParser(description='''
+        Show local chromecast status in a format suitable for status bars.
+    ''')
     parser.add_argument(
         '--period', metavar='SECONDS', default=10, type=int,
         help=('Duration to display the status before cycling to the'
