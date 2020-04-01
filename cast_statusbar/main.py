@@ -79,13 +79,34 @@ class Player:
 
 class StatusMonitor:
 
-    def __init__(self, chromecasts: List[pychromecast.Chromecast] = None):
-        self.players = []
+    def __init__(self, chromecasts: List[pychromecast.Chromecast] = None,
+                 ttl=datetime.timedelta(minutes=4)):
+        self.ttl = ttl
+        self.chromecasts = chromecasts
+        self._players = self.discover(chromecasts)
+
+    def discover(self, chromecasts: List[pychromecast.Chromecast] = None):
+        logging.info("Searching for chromecasts.")
+        players = []
         for cast in chromecasts or pychromecast.get_chromecasts():
+            logging.info("Registering chromecast: %s", cast)
             controller = pychromecast.controllers.media.MediaController()
             cast.register_handler(controller)
-            cast.wait()
-            self.players.append(Player(cast, controller))
+            cast.wait(5)
+            logging.info("Registered")
+            players.append(Player(cast, controller))
+        self.discover_time = datetime.datetime.now()
+        return players
+
+    @property
+    def should_refresh(self) -> bool:
+        return datetime.datetime.now() - self.discover_time > self.ttl
+
+    @property
+    def players(self) -> List[Player]:
+        if self.should_refresh:
+            self._players = self.discover(self.chromecasts)
+        return self._players
 
     @property
     def active_players(self) -> List[Player]:
@@ -125,13 +146,14 @@ def run(args):
     fmt = args.format
     if args.unicode:
       fmt = fmt.replace('{p.status}', '{p.unicode_status}')
+    period = datetime.timedelta(seconds=args.period)
 
     s = StatusMonitor()
     previous_output = None
     previous_status = None
     marquee = None
     for status in s.status_rotator(fmt):
-        start = time.time()
+        start = datetime.datetime.now()
         if status != previous_status or marquee is None:
             previous_status = status
             marquee = window_marquee(status, width=args.width)
@@ -143,7 +165,7 @@ def run(args):
                 time.sleep(args.marquee_pause)
             else:
                 time.sleep(1/args.marquee_speed)
-            if time.time() - start > args.period:
+            if datetime.datetime.now() - start > period:
                 break
     return 0
 
