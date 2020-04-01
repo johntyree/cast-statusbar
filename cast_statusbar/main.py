@@ -12,6 +12,7 @@ import time
 from dataclasses import dataclass
 from typing import Iterator, List, Text, Tuple
 
+import humanize
 import pychromecast
 
 try:
@@ -91,7 +92,8 @@ class StatusMonitor:
                  ttl=datetime.timedelta(minutes=3)):
         self.ttl = ttl
         self.chromecasts = chromecasts
-        self._players = self.discover(chromecasts)
+        self._players = []
+        self.discover_time = datetime.datetime.fromtimestamp(0)
 
     @trace_with(LOGGER.debug)
     def discover(self, chromecasts: List[pychromecast.Chromecast] = None):
@@ -119,10 +121,7 @@ class StatusMonitor:
         if self.should_refresh:
             LOGGER.info("Chromecast list expired, Refreshing...")
             self._players = self.discover(self.chromecasts)
-            hours, seconds = divmod(self.ttl.total_seconds(), 3600)
-            minutes, seconds = divmod(seconds, 60)
-            countdown = "{:02g}:{:02g}:{:02g}".format(hours, minutes, seconds)
-            LOGGER.info("Next refresh in %s", countdown)
+            LOGGER.info("Next refresh in %s", humanize.naturaldelta(self.ttl))
         return self._players
 
     @property

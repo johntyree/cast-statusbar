@@ -19,6 +19,7 @@ setup(
     },
     install_requires=[
         'pychromecast',
+        'humanize'
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",
