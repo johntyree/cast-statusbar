@@ -10,6 +10,7 @@ Type=simple
 Restart=always
 RestartSec=10
 StandardOutput=file:/home/jtyree/.config/media-status-fifo
+StandardError=journal
 ExecStart=/home/jtyree/.local/bin/cast-statusbar
 
 [Install]

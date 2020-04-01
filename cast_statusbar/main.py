@@ -93,16 +93,16 @@ class StatusMonitor:
         self.chromecasts = chromecasts
         self._players = self.discover(chromecasts)
 
-    @twols.trace_with(LOGGER.info)
+    @trace_with(LOGGER.debug)
     def discover(self, chromecasts: List[pychromecast.Chromecast] = None):
-        logging.info("Searching for chromecasts.")
+        LOGGER.info("Searching for chromecasts.")
         players = []
         for cast in chromecasts or pychromecast.get_chromecasts():
-            logging.info("Registering chromecast: %s", cast)
+            LOGGER.info("Registering chromecast: %r", cast)
             controller = pychromecast.controllers.media.MediaController()
             cast.register_handler(controller)
             cast.wait(5)
-            logging.info("Registered")
+            LOGGER.debug("Registered %r", cast)
             players.append(Player(cast, controller))
         self.discover_time = datetime.datetime.now()
         return players
@@ -114,6 +114,7 @@ class StatusMonitor:
     @property
     def players(self) -> List[Player]:
         if self.should_refresh:
+            LOGGER.info("Chromecast list expired, Refreshing...")
             self._players = self.discover(self.chromecasts)
         return self._players
 
@@ -196,12 +197,29 @@ def main():
         help='Output at most `width` unicode codepoints per line.')
     parser.add_argument(
         '--marquee_speed', type=float, metavar='CHARACTERS_PER_SECOND',
-        default=5, help='Number of characters to scroll per second')
+        default=5, help='Number of characters to scroll per second.')
     parser.add_argument(
         '--marquee_pause', type=float, metavar='SECONDS', default=2,
-        help='Number of characters to scroll per second')
+        help='Number of characters to scroll per second.')
+    log_arg_parser = parser.add_mutually_exclusive_group()
+
+    LOG_LEVELS = ('DEBUG', 'INFO', 'WARNING')
+
+    log_arg_parser.add_argument(
+        '--log_level', type=str, choices=LOG_LEVELS, default='INFO')
+    verbose = log_arg_parser.add_mutually_exclusive_group()
+    verbose.add_argument('-v', '--verbose', action='count', default=0,
+                         help="Log more.")
+    verbose.add_argument('-q', '--quiet', action='count', default=0,
+                         help="Log less.")
 
     args = parser.parse_args()
+
+    verbosity = LOG_LEVELS.index(args.log_level) + args.quiet - args.verbose
+    verbosity = max(0, min(len(LOG_LEVELS)-1, verbosity))
+    log_level = LOG_LEVELS[verbosity]
+    logging.basicConfig(level=args.log_level)
+
 
     def die(num=0, _frame=None):
         print('', flush=True)
