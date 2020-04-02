@@ -23,8 +23,6 @@ except ImportError:
         return lambda x: x
 
 LOGGER = logging.getLogger(__name__)
-DEFAULT_FMT = '{p.app} | {p.name}: {p.artist} - {p.title}'
-
 
 @dataclass
 class Player:
@@ -33,35 +31,35 @@ class Player:
 
     @property
     def name(self):
-        return self._cast.name
+        return self._cast.name or ''
 
     @property
     def app(self):
-        return self._cast.app_display_name
+        return self._cast.app_display_name or ''
 
     @property
     def album(self):
-        return self._controller.status.album
+        return self._controller.status.album or ''
 
     @property
     def artist(self):
-        return self._controller.status.artist
+        return self._controller.status.artist or ''
 
     @property
     def title(self):
-        return self._controller.status.title
+        return self._controller.status.title or ''
 
     @property
     def is_active(self):
-        return self._controller.is_active
+        return self._controller.is_active or ''
 
     @property
     def player_state(self):
-        return self._controller.status.player_state
+        return self._controller.status.player_state or ''
 
     @property
     def status(self):
-        status = self._controller.status.player_state
+        status = self._controller.status.player_state or ''
         return {
             'PLAYING': '> ',
             'PAUSED': '|| ',
@@ -71,7 +69,7 @@ class Player:
 
     @property
     def unicode_status(self):
-        status = self._controller.status.player_state
+        status = self._controller.status.player_state or ''
         return {
             'PLAYING': '▶️  ',
             'PAUSED': '⏸️  ',
@@ -84,6 +82,14 @@ class Player:
 
     def pause(self):
         return self._controller.pause()
+
+    def pretty(self, fmt: Optional[Text]) -> Text:
+        if fmt is None:
+            fmt = self.name and '{p.name}'
+            fmt += self.app and (fmt and ' : ') + '{p.app}'
+            fmt += self.artist and (fmt and ' | ') + '{p.artist}'
+            fmt += self.title and (fmt and ' - ') + '{p.title}'
+        return fmt.format(p=self)
 
 
 class StatusMonitor:
@@ -132,7 +138,7 @@ class StatusMonitor:
     def status_rotator(self, fmt: Text) -> Iterator[Text]:
         while True:
             for player in self.active_players:
-                yield fmt.format(p=player)
+                yield player.pretty(fmt)
             # If nothing is active we never yield, so pause for a moment.
             if not self.active_players:
                 yield ''
@@ -195,8 +201,7 @@ def main():
         help=('Duration to display the status before cycling to the'
               ' next active chromecast.'))
     parser.add_argument(
-        '--format', '-f', metavar='FORMAT', default=DEFAULT_FMT,
-        help='Format string for status. Default: {!r}'.format(DEFAULT_FMT))
+        '--format', '-f', metavar='FORMAT', help='Format string for status')
     parser.add_argument(
         '--unicode', '-u', action='store_true',
         help='Use unicode glyphs for {p.status} in format.')
