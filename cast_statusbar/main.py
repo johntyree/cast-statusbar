@@ -181,7 +181,7 @@ def run(args):
                 time.sleep(args.marquee_pause)
             else:
                 time.sleep(1/args.marquee_speed)
-            if datetime.datetime.now() - start > period:
+            if datetime.datetime.now() - start > period and endpoint:
                 break
     return 0
 
