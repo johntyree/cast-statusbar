@@ -10,13 +10,13 @@ import signal
 import sys
 import time
 from dataclasses import dataclass
-from typing import Iterator, List, Text, Tuple
+from typing import Iterator, List, Optional, Text, Tuple
 
-import humanize
-import pychromecast
+import humanize  # type: ignore
+import pychromecast  # type: ignore
 
 try:
-    from twols import trace_with
+    from twols import trace_with  # type: ignore
 except ImportError:
     # No-op decorator
     def trace_with(func=None):
@@ -24,41 +24,42 @@ except ImportError:
 
 LOGGER = logging.getLogger(__name__)
 
+
 @dataclass
 class Player:
     _cast: pychromecast.Chromecast
     _controller: pychromecast.controllers.media.MediaController
 
     @property
-    def name(self):
+    def name(self) -> Text:
         return self._cast.name or ''
 
     @property
-    def app(self):
+    def app(self) -> Text:
         return self._cast.app_display_name or ''
 
     @property
-    def album(self):
+    def album(self) -> Text:
         return self._controller.status.album or ''
 
     @property
-    def artist(self):
+    def artist(self) -> Text:
         return self._controller.status.artist or ''
 
     @property
-    def title(self):
+    def title(self) -> Text:
         return self._controller.status.title or ''
 
     @property
-    def is_active(self):
+    def is_active(self) -> Text:
         return self._controller.is_active or ''
 
     @property
-    def player_state(self):
+    def player_state(self) -> Text:
         return self._controller.status.player_state or ''
 
     @property
-    def status(self):
+    def status(self) -> Text:
         status = self._controller.status.player_state or ''
         return {
             'PLAYING': '> ',
@@ -68,7 +69,7 @@ class Player:
         }.get(status, status)
 
     @property
-    def unicode_status(self):
+    def unicode_status(self) -> Text:
         status = self._controller.status.player_state or ''
         return {
             'PLAYING': '▶️  ',
@@ -98,22 +99,22 @@ class StatusMonitor:
                  ttl=datetime.timedelta(minutes=3)):
         self.ttl = ttl
         self.chromecasts = chromecasts
-        self._players = []
+        self._players: List[Player] = []
         self.discover_time = datetime.datetime.fromtimestamp(0)
 
     @trace_with(LOGGER.debug)
     def discover(self, chromecasts: List[pychromecast.Chromecast] = None):
-        LOGGER.info("Searching for chromecasts.")
+        LOGGER.info('Searching for chromecasts.')
         players = []
         for cast in chromecasts or pychromecast.get_chromecasts():
-            LOGGER.info("Registering chromecast: %r", cast)
+            LOGGER.info('Registering chromecast: %r', cast)
             controller = pychromecast.controllers.media.MediaController()
             cast.register_handler(controller)
             cast.wait(5)
-            LOGGER.debug("Registered %r", cast)
+            LOGGER.debug('Registered %r', cast)
             players.append(Player(cast, controller))
         self.discover_time = datetime.datetime.now()
-        LOGGER.info("Found %d devices: %s",
+        LOGGER.info('Found %d devices: %s',
                     len(players),
                     ', '.join(sorted(p.name for p in players)))
         return players
@@ -125,9 +126,9 @@ class StatusMonitor:
     @property
     def players(self) -> List[Player]:
         if self.should_refresh:
-            LOGGER.info("Chromecast list expired, Refreshing...")
+            LOGGER.info('Chromecast list expired, Refreshing...')
             self._players = self.discover(self.chromecasts)
-            LOGGER.info("Next refresh in %s", humanize.naturaldelta(self.ttl))
+            LOGGER.info('Next refresh in %s', humanize.naturaldelta(self.ttl))
         return self._players
 
     @property
@@ -135,7 +136,7 @@ class StatusMonitor:
         return [player for player in self.players
                 if player.is_active and player.player_state != 'UNKNOWN']
 
-    def status_rotator(self, fmt: Text) -> Iterator[Text]:
+    def status_rotator(self, fmt: Optional[Text]) -> Iterator[Text]:
         while True:
             for player in self.active_players:
                 yield player.pretty(fmt)
@@ -167,7 +168,7 @@ def run(args):
     """Run main."""
     fmt = args.format
     if args.unicode:
-      fmt = fmt.replace('{p.status}', '{p.unicode_status}')
+        fmt = fmt.replace('{p.status}', '{p.unicode_status}')
     period = datetime.timedelta(seconds=args.period)
 
     s = StatusMonitor()
@@ -222,17 +223,16 @@ def main():
         '--log_level', type=str, choices=LOG_LEVELS, default='INFO')
     verbose = log_arg_parser.add_mutually_exclusive_group()
     verbose.add_argument('-v', '--verbose', action='count', default=0,
-                         help="Log more.")
+                         help='Log more.')
     verbose.add_argument('-q', '--quiet', action='count', default=0,
-                         help="Log less.")
+                         help='Log less.')
 
     args = parser.parse_args()
 
     verbosity = LOG_LEVELS.index(args.log_level) + args.quiet - args.verbose
     verbosity = max(0, min(len(LOG_LEVELS)-1, verbosity))
     log_level = LOG_LEVELS[verbosity]
-    logging.basicConfig(level=args.log_level)
-
+    logging.basicConfig(level=log_level)
 
     def die(num=0, _frame=None):
         print('', flush=True)
