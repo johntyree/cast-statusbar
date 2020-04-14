@@ -105,14 +105,20 @@ class StatusMonitor:
     @trace_with(LOGGER.debug)
     def discover(self, chromecasts: List[pychromecast.Chromecast] = None):
         LOGGER.info('Searching for chromecasts.')
+        old_players = {p._cast.uuid: p for p in self._players}
         players = []
         for cast in chromecasts or pychromecast.get_chromecasts():
-            LOGGER.info('Registering chromecast: %r', cast)
-            controller = pychromecast.controllers.media.MediaController()
-            cast.register_handler(controller)
-            cast.wait(5)
-            LOGGER.debug('Registered %r', cast)
-            players.append(Player(cast, controller))
+            player = old_players.get(cast.uuid)
+            if player is not None:
+                LOGGER.info('Keeping existing player for chromecast: %r', cast)
+            else:
+                LOGGER.info('Registering chromecast: %r', cast)
+                controller = pychromecast.controllers.media.MediaController()
+                cast.register_handler(controller)
+                cast.wait(5)
+                LOGGER.debug('Registered %r', cast)
+                player = Player(cast, controller)
+            players.append(player)
         self.discover_time = datetime.datetime.now()
         LOGGER.info('Found %d devices: %s',
                     len(players),
