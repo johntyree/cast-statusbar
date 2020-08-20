@@ -107,7 +107,7 @@ class StatusMonitor:
         LOGGER.info('Searching for chromecasts.')
         old_players = {p._cast.uuid: p for p in self._players}
         players = []
-        for cast in chromecasts or pychromecast.get_chromecasts():
+        for cast in chromecasts or pychromecast.get_chromecasts()[0]:
             player = old_players.get(cast.uuid)
             if player is not None:
                 LOGGER.info('Keeping existing player for chromecast: %r', cast)
