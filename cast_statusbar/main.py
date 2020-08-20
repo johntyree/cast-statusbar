@@ -6,6 +6,7 @@
 import argparse
 import datetime
 import logging
+import re
 import signal
 import sys
 import time
@@ -142,10 +143,14 @@ class StatusMonitor:
         return [player for player in self.players
                 if player.is_active and player.player_state != 'UNKNOWN']
 
-    def status_rotator(self, fmt: Optional[Text]) -> Iterator[Text]:
+    def status_rotator(self, fmt: Optional[Text],
+                       blacklist_regex: Text) -> Iterator[Text]:
+        blacklist_matcher = re.compile(blacklist_regex)
         while True:
             for player in self.active_players:
-                yield player.pretty(fmt)
+                status = player.pretty(fmt)
+                if blacklist_matcher and not blacklist_matcher.search(status):
+                    yield status
             # If nothing is active we never yield, so pause for a moment.
             if not self.active_players:
                 yield ''
@@ -181,7 +186,7 @@ def run(args):
     previous_output = None
     previous_status = None
     marquee = None
-    for status in s.status_rotator(fmt):
+    for status in s.status_rotator(fmt, args.blacklist_regex):
         start = datetime.datetime.now()
         if status != previous_status or marquee is None:
             previous_status = status
@@ -221,6 +226,9 @@ def main():
     parser.add_argument(
         '--marquee_pause', type=float, metavar='SECONDS', default=2,
         help='Number of characters to scroll per second.')
+    parser.add_argument(
+        '--blacklist-regex', type=str, nargs='+', metavar='REGEX',
+        default='^$', help='Ignore strings matching this regex.')
     log_arg_parser = parser.add_mutually_exclusive_group()
 
     LOG_LEVELS = ('DEBUG', 'INFO', 'WARNING')
