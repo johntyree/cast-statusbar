@@ -100,7 +100,6 @@ class StatusMonitor:
     def __init__(self, chromecasts: List[pychromecast.Chromecast] = None,
                  ttl=datetime.timedelta(minutes=3)):
         self.ttl = ttl
-        self.chromecasts = chromecasts
         self._players: List[Player] = []
         self.discover_time = datetime.datetime.fromtimestamp(0)
 
@@ -126,6 +125,10 @@ class StatusMonitor:
                     len(players),
                     ', '.join(sorted(p.name for p in players)))
         return players
+
+    @property
+    def chromecasts(self) -> List[pychromecast.Chromecast]:
+        return [p._cast for p in self.players]
 
     @property
     def should_refresh(self) -> bool:
