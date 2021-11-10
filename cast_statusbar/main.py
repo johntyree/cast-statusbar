@@ -5,6 +5,7 @@
 
 import argparse
 import datetime
+import gc
 import logging
 import re
 import signal
@@ -124,6 +125,8 @@ class StatusMonitor:
         LOGGER.info('Found %d devices: %s',
                     len(players),
                     ', '.join(sorted(p.name for p in players)))
+        # Run the GC here to make sure old sockets get closed.
+        gc.collect()
         return players
 
     @property
