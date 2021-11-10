@@ -159,7 +159,7 @@ class StatusMonitor:
                 if blacklist_matcher and not blacklist_matcher.search(status):
                     yield status
             # If nothing is active we never yield, so pause for a moment.
-            if not self.active_players:
+            else:
                 yield ''
                 time.sleep(1)
 
