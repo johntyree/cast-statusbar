@@ -23,6 +23,7 @@ except ImportError:
     def trace_with(func=None):
         return lambda x: x
 
+logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
 
 
